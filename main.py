@@ -2,8 +2,11 @@ from fastapi import FastAPI, HTTPException
 from datetime import datetime
 from database import get_connection
 from models import create_tables
+from fastapi.staticfiles import StaticFiles
+
 
 app = FastAPI(title="Meridian Bike Share API")
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 create_tables()
 
