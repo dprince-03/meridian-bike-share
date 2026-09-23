@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SQLite database (recreate it with: python seed.py)
+meridian.db
+meridian.db-shm
+meridian.db-wal

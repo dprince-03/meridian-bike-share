@@ -1,303 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meridian Fleet Board</title>
-<style>
-  :root {
-    --bg: #14181a;
-    --panel: #1c2124;
-    --line: #2b3236;
-    --text: #e7e3d8;
-    --muted: #8b948f;
-    --accent: #5fa777;
-    --warn: #e0a458;
-    --crit: #c1503d;
-    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meridian Bike Share</title>
+  <style>
+    :root {
+      --text: #1f2328; --muted: #656d76; --bg: #f6f8fa; --card: #ffffff;
+      --line: #d0d7de; --bar: #2f6f9f; --track: #eaeef2; --error: #cf222e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text: #e6edf3; --muted: #8d96a0; --bg: #0d1117; --card: #161b22;
+        --line: #30363d; --bar: #5b9bd5; --track: #21262d; --error: #f85149;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.5 system-ui, sans-serif; color: var(--text); background: var(--bg); }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+    a { color: var(--bar); }
 
-  * { box-sizing: border-box; }
+    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 20px; }
+    header h1 { margin: 0; font-size: 20px; }
+    header .right { margin-left: auto; color: var(--muted); display: flex; align-items: center; gap: 12px; }
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    padding: 2.5rem 1.5rem 4rem;
-  }
+    /* Summary numbers */
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .tile { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+    .tile .label { color: var(--muted); font-size: 13px; }
+    .tile .value { font-size: 28px; font-weight: 600; }
 
-  .wrap {
-    max-width: 780px;
-    margin: 0 auto;
-  }
+    /* Two cards side by side, one column on phones */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+    .grid.wide-right { grid-template-columns: 2fr 3fr; }
+    @media (max-width: 800px) { .grid, .grid.wide-right { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 16px; min-width: 0; }
+    .card h2 { margin: 0 0 12px; font-size: 15px; }
+    .scroll { overflow-x: auto; }
 
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th { color: var(--muted); font-weight: 500; font-size: 13px; }
+    tr:last-child td { border-bottom: 0; }
+    .num { text-align: right; }
+    .muted { color: var(--muted); }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td, tr.selected td { background: var(--track); }
 
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0 0 0.25rem;
-    letter-spacing: -0.01em;
-  }
+    .bar { height: 8px; background: var(--track); border-radius: 4px; min-width: 80px; }
+    .bar div { height: 100%; background: var(--bar); border-radius: 4px; }
 
-  .subtitle {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  .status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--muted);
-    font-family: var(--mono);
-  }
-
-  .live-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  .live-dot.down { background: var(--crit); animation: none; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
-
-  .summary {
-    display: flex;
-    gap: 2.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .summary-value {
-    display: block;
-    font-family: var(--mono);
-    font-size: 2.25rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .summary-label {
-    display: block;
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-top: 0.15rem;
-  }
-
-  .board { border-top: 1px solid var(--line); }
-
-  .row {
-    display: grid;
-    grid-template-columns: 1fr 90px 120px 70px;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .row-name { font-size: 0.95rem; }
-
-  .row-capacity {
-    color: var(--muted);
-    font-size: 0.8rem;
-    font-family: var(--mono);
-  }
-
-  .row-bar {
-    height: 4px;
-    background: var(--panel);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .row-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.6s ease;
-  }
-
-  .row-bar-fill.warn { background: var(--warn); }
-  .row-bar-fill.crit { background: var(--crit); }
-
-  .row-count {
-    font-family: var(--mono);
-    font-size: 1.1rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .empty, .error {
-    padding: 2.5rem 0;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  .error { color: var(--crit); }
-
-  footer { margin-top: 2rem; }
-
-  button {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 0.85rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  button:hover { border-color: var(--accent); }
-
-  button:focus-visible,
-  a:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  @media (max-width: 520px) {
-    .row { grid-template-columns: 1fr 60px 40px; }
-    .row-capacity { display: none; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .live-dot { animation: none; }
-    .row-bar-fill { transition: none; }
-  }
-</style>
+    button, select { font: inherit; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--text); }
+    button { cursor: pointer; }
+    button:hover { background: var(--track); }
+    #message { margin-bottom: 16px; }
+    #message:empty { display: none; }
+    #message.error { color: var(--error); }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Meridian Fleet Board</h1>
-        <p class="subtitle">Live dock status across all stations</p>
-      </div>
-      <div class="status">
-        <span class="live-dot" id="liveDot"></span>
-        <span id="statusText">connecting</span>
-      </div>
-    </header>
+<main>
+  <header>
+    <h1>Meridian Bike Share</h1>
+    <div class="right">
+      <span id="updated"></span>
+      <button id="refresh" type="button">Refresh</button>
+      <a href="/docs" target="_blank">API docs</a>
+    </div>
+  </header>
 
-    <section class="summary">
-      <div>
-        <span class="summary-value" id="totalFree">--</span>
-        <span class="summary-label">bikes free</span>
-      </div>
-      <div>
-        <span class="summary-value" id="totalStations">--</span>
-        <span class="summary-label">stations</span>
-      </div>
-    </section>
+  <div id="message" role="status"></div>
 
-    <main>
-      <div class="board" id="board"></div>
-    </main>
-
-    <footer>
-      <button id="refreshBtn" type="button">Refresh</button>
-    </footer>
+  <div class="tiles">
+    <div class="tile"><div class="label">Stations</div><div class="value" id="total-stations">–</div></div>
+    <div class="tile"><div class="label">Bikes available</div><div class="value" id="total-free">–</div></div>
+    <div class="tile"><div class="label">Bikes out now</div><div class="value" id="total-out">–</div></div>
+    <div class="tile"><div class="label">Total rentals</div><div class="value" id="total-rentals">–</div></div>
   </div>
 
+  <div class="grid">
+    <div class="card">
+      <h2>Stations</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Station</th><th class="num">Free / capacity</th><th style="width:40%">Fill</th></tr></thead>
+          <tbody id="stations"></tbody>
+        </table>
+      </div>
+      <p class="muted" style="margin:10px 0 0">Click a station to see its bikes.</p>
+    </div>
+
+    <div class="card">
+      <h2 id="bikes-title">Bikes</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Bike</th><th>Status</th><th></th></tr></thead>
+          <tbody id="bikes"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid wide-right">
+    <div class="card">
+      <h2>Busiest stations</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Station</th><th class="num">Rentals</th><th style="width:50%"></th></tr></thead>
+          <tbody id="busiest"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Bikes out now</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Rental</th><th>Bike</th><th>From</th><th>Out for</th><th>Return to</th></tr></thead>
+          <tbody id="active"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recent rentals</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Rental</th><th>Bike</th><th>From</th><th>To</th><th>Started</th><th>Duration</th></tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
 <script>
-  const board = document.getElementById('board');
-  const statusText = document.getElementById('statusText');
-  const liveDot = document.getElementById('liveDot');
-  const totalFreeEl = document.getElementById('totalFree');
-  const totalStationsEl = document.getElementById('totalStations');
-  const refreshBtn = document.getElementById('refreshBtn');
+  let stations = [];
+  let selectedStation = null;
 
-  function countUp(el, target, duration = 500) {
-    const start = performance.now();
-    function tick(now) {
-      const progress = Math.min((now - start) / duration, 1);
-      el.textContent = Math.round(progress * target);
-      if (progress < 1) requestAnimationFrame(tick);
+  // ---------- Small helpers ----------
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  // Make text safe to put inside HTML (so a name like "<b>" shows as text).
+  function esc(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function stationName(id) {
+    const station = stations.find((s) => s.id === id);
+    return station ? station.name : "#" + id;
+  }
+
+  function formatTime(iso) {
+    return new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function formatDuration(startIso, endIso) {
+    const end = endIso ? new Date(endIso) : new Date();
+    const minutes = Math.max(0, Math.round((end - new Date(startIso)) / 60000));
+    if (minutes < 60) return minutes + " min";
+    return Math.floor(minutes / 60) + " h " + (minutes % 60) + " min";
+  }
+
+  function bar(value, max) {
+    const percent = max > 0 ? Math.round((value / max) * 100) : 0;
+    return `<div class="bar" title="${value} of ${max}"><div style="width:${percent}%"></div></div>`;
+  }
+
+  function emptyRow(columns, text) {
+    return `<tr><td colspan="${columns}" class="muted">${text}</td></tr>`;
+  }
+
+  function showMessage(text, isError) {
+    $("message").textContent = text;
+    $("message").className = isError ? "error" : "";
+  }
+
+  // Call the API. If it fails, throw the server's error message (e.g. "Bike already out").
+  async function api(method, path) {
+    const response = await fetch(path, { method: method });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(typeof data.detail === "string" ? data.detail : "Request failed (" + response.status + ")");
     }
-    requestAnimationFrame(tick);
+    return data;
   }
 
-  function levelClass(free, capacity) {
-    if (capacity === 0) return '';
-    const ratio = free / capacity;
-    if (ratio === 0) return 'crit';
-    if (ratio < 0.25) return 'warn';
-    return '';
+  // ---------- Drawing each section ----------
+
+  function renderTiles(rentals) {
+    const out = rentals.filter((r) => !r.end_time).length;
+    $("total-stations").textContent = stations.length;
+    $("total-free").textContent = stations.reduce((sum, s) => sum + s.free_bikes, 0);
+    $("total-out").textContent = out;
+    $("total-rentals").textContent = rentals.length;
   }
 
-  async function loadStations() {
-    statusText.textContent = 'connecting';
-    liveDot.classList.remove('down');
-    board.innerHTML = '<p class="empty">Loading stations…</p>';
+  function renderStations() {
+    $("stations").innerHTML = stations.map((s) => `
+      <tr class="clickable ${s.id === selectedStation ? "selected" : ""}" data-station="${s.id}">
+        <td>${esc(s.name)}</td>
+        <td class="num">${s.free_bikes} / ${s.capacity}</td>
+        <td>${bar(s.free_bikes, s.capacity)}</td>
+      </tr>`).join("");
+  }
 
+  async function renderBikes() {
+    const bikes = await api("GET", "/stations/" + selectedStation + "/bikes");
+    const docked = bikes.filter((b) => b.status === "available");
+    $("bikes-title").textContent = "Bikes at " + stationName(selectedStation);
+    $("bikes").innerHTML = docked.length
+      ? docked.map((b) => `
+          <tr>
+            <td>#${b.id}</td><td>available</td>
+            <td class="num"><button type="button" data-rent="${b.id}">Rent</button></td>
+          </tr>`).join("")
+      : emptyRow(3, "No bikes docked here.");
+  }
+
+  function renderActive(rentals) {
+    const active = rentals.filter((r) => !r.end_time);
+    const options = stations.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+
+    // Remember any "Return to" choices so the auto-refresh doesn't reset them.
+    const chosen = {};
+    document.querySelectorAll("#active select").forEach((select) => {
+      chosen[select.id] = select.value;
+    });
+
+    $("active").innerHTML = active.length
+      ? active.map((r) => `
+          <tr>
+            <td>#${r.id}</td><td>#${r.bike_id}</td>
+            <td>${esc(stationName(r.start_station_id))}</td>
+            <td>${formatDuration(r.start_time)}</td>
+            <td>
+              <select id="return-to-${r.id}">${options}</select>
+              <button type="button" data-return="${r.id}">Return</button>
+            </td>
+          </tr>`).join("")
+      : emptyRow(5, "No bikes out.");
+
+    for (const id in chosen) {
+      if ($(id)) $(id).value = chosen[id];
+    }
+  }
+
+  async function renderBusiest() {
+    const rows = await api("GET", "/reports/busiest-stations");
+    const max = Math.max(1, ...rows.map((r) => r.rental_count));
+    $("busiest").innerHTML = rows.map((r) => `
+      <tr>
+        <td>${esc(r.name)}</td>
+        <td class="num">${r.rental_count}</td>
+        <td>${bar(r.rental_count, max)}</td>
+      </tr>`).join("");
+  }
+
+  function renderRecent(rentals) {
+    const recent = rentals.slice(0, 10);  // the API returns newest first
+    $("recent").innerHTML = recent.length
+      ? recent.map((r) => `
+          <tr>
+            <td>#${r.id}</td><td>#${r.bike_id}</td>
+            <td>${esc(stationName(r.start_station_id))}</td>
+            <td>${r.end_station_id ? esc(stationName(r.end_station_id)) : '<span class="muted">still out</span>'}</td>
+            <td>${formatTime(r.start_time)}</td>
+            <td>${formatDuration(r.start_time, r.end_time)}</td>
+          </tr>`).join("")
+      : emptyRow(6, "No rentals yet.");
+  }
+
+  // ---------- Load everything ----------
+
+  async function refresh() {
     try {
-      const res = await fetch('/stations');
-      if (!res.ok) throw new Error('Request failed: ' + res.status);
-      const stations = await res.json();
+      stations = await api("GET", "/stations");
+      const rentals = await api("GET", "/rentals");
 
-      if (!Array.isArray(stations) || stations.length === 0) {
-        board.innerHTML = '<p class="empty">No stations found.</p>';
-        totalFreeEl.textContent = '0';
-        totalStationsEl.textContent = '0';
-        statusText.textContent = 'live';
-        return;
+      // Show the first station's bikes until someone clicks another one.
+      if (selectedStation === null && stations.length) {
+        selectedStation = stations[0].id;
       }
 
-      board.innerHTML = '';
-      let totalFree = 0;
-
-      stations.forEach(s => {
-        const free = s.free_bikes ?? 0;
-        const capacity = s.capacity ?? 0;
-        totalFree += free;
-
-        const row = document.createElement('div');
-        row.className = 'row';
-
-        const fillPct = capacity > 0 ? Math.min((free / capacity) * 100, 100) : 0;
-        const cls = levelClass(free, capacity);
-
-        row.innerHTML = `
-          <span class="row-name">${s.name ?? 'Unnamed station'}</span>
-          <span class="row-capacity">${capacity} docks</span>
-          <div class="row-bar"><div class="row-bar-fill ${cls}" style="width:${fillPct}%"></div></div>
-          <span class="row-count">00</span>
-        `;
-        board.appendChild(row);
-        countUp(row.querySelector('.row-count'), free);
-      });
-
-      countUp(totalFreeEl, totalFree);
-      totalStationsEl.textContent = stations.length;
-      statusText.textContent = 'live';
+      renderTiles(rentals);
+      renderStations();
+      renderActive(rentals);
+      renderRecent(rentals);
+      if (selectedStation !== null) await renderBikes();
+      await renderBusiest();
+      $("updated").textContent = "Updated " + new Date().toLocaleTimeString();
     } catch (err) {
-      board.innerHTML = '<p class="error">Unable to reach the API. Check that the server is running, then refresh.</p>';
-      statusText.textContent = 'offline';
-      liveDot.classList.add('down');
+      showMessage("Couldn't load data: " + err.message + ". Is the server running?", true);
     }
   }
 
-  refreshBtn.addEventListener('click', loadStations);
-  loadStations();
+  // ---------- Buttons and clicks ----------
+
+  $("refresh").addEventListener("click", refresh);
+
+  $("stations").addEventListener("click", (event) => {
+    const row = event.target.closest("tr[data-station]");
+    if (!row) return;
+    selectedStation = Number(row.dataset.station);
+    refresh();
+  });
+
+  document.addEventListener("click", async (event) => {
+    const bikeId = event.target.dataset.rent;
+    const rentalId = event.target.dataset.return;
+    if (!bikeId && !rentalId) return;
+
+    try {
+      if (bikeId) {
+        const result = await api("POST", "/rentals?bike_id=" + bikeId + "&start_station_id=" + selectedStation);
+        showMessage("Rental #" + result.rental_id + " started for bike #" + bikeId + ".");
+      } else {
+        const endStation = $("return-to-" + rentalId).value;
+        await api("PATCH", "/rentals/" + rentalId + "/return?end_station_id=" + endStation);
+        showMessage("Rental #" + rentalId + " returned to " + stationName(Number(endStation)) + ".");
+      }
+    } catch (err) {
+      showMessage(err.message, true);
+    }
+    refresh();
+  });
+
+  // This page gets its data from the API, so it only works when the server serves it.
+  // Opening the file directly (file://...) can't reach the API.
+  if (location.protocol === "file:") {
+    $("message").innerHTML = 'This page must be opened through the server. Start it with ' +
+      '<code>uvicorn main:app</code> and go to <a href="http://localhost:8000">http://localhost:8000</a>.';
+    $("message").className = "error";
+  } else {
+    refresh();
+    setInterval(refresh, 15000);  // update the numbers every 15 seconds
+  }
 </script>
 </body>
 </html>
