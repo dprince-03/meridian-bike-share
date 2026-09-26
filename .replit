@@ -1,0 +1,13 @@
+modules = ["python-3.11"]
+entrypoint = "main.py"
+
+# What the Run button does: load the seed data, then start the API.
+run = "pip install -r requirements.txt && python seed.py && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+[[ports]]
+localPort = 8000
+externalPort = 80
+
+[deployment]
+run = ["sh", "-c", "python seed.py && uvicorn main:app --host 0.0.0.0 --port 8000"]
+build = ["sh", "-c", "pip install -r requirements.txt"]

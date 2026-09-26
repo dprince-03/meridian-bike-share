@@ -33,8 +33,9 @@ meridian-bike-share/
 
 ## Setup and Running Locally
 
-The steps below work the same in GitHub Codespaces (recommended) or any
-Python 3 environment.
+**Live URL:** _add your deployed URL here_
+
+The steps below work the same on Replit or in any Python 3 environment.
 
 1. **Install dependencies**
 
@@ -58,8 +59,16 @@ Python 3 environment.
 
 `python seed.py` resets all data, so run it again whenever you want a fresh start.
 
-In GitHub Codespaces, the forwarded port URL is generated automatically
-and shown in the "Ports" tab.
+### Running on Replit (or any host)
+
+Import this GitHub repo into a Python Repl and set the run command to:
+
+```bash
+python seed.py && uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+The database file is not stored in git, so `seed.py` must run first to
+create the tables and load the data.
 
 ## Data Model
 
@@ -136,6 +145,16 @@ this same API. It shows:
 
 It refreshes every 15 seconds, follows the system's light or dark mode,
 and needs no build step or framework.
+
+## Hindsight: One Thing We Would Change
+
+**Bikes need an "out of service" status.** The brief says staff need to
+know which bikes are out of service, but our `bikes.status` column only
+tracks `available` and `out`. A broken bike currently looks the same as
+a bike that can be rented. With hindsight we would add a third status,
+`maintenance`, and have the database only accept those three values
+(`CHECK (status IN ('available', 'out', 'maintenance'))`). Then broken bikes
+would stop counting as free, and staff could list them with one query.
 
 ## Notes on Seed Data
 

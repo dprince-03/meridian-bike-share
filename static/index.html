@@ -3,140 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Meridian Bike Share</title>
+  <title>Meridian Bike Share Admin</title>
   <style>
     :root {
-      --text: #1f2328; --muted: #656d76; --bg: #f6f8fa; --card: #ffffff;
-      --line: #d0d7de; --bar: #2f6f9f; --track: #eaeef2; --error: #cf222e;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --text: #e6edf3; --muted: #8d96a0; --bg: #0d1117; --card: #161b22;
-        --line: #30363d; --bar: #5b9bd5; --track: #21262d; --error: #f85149;
-      }
+      --sidebar: #1e2139; --sidebar-text: #c7c9d9; --accent: #4f46e5; --accent-light: #eef2ff;
+      --bg: #f8fafc; --card: #ffffff; --line: #e2e8f0; --text: #1e293b; --muted: #64748b;
+      --blue: #3b82f6; --orange: #f59e0b; --green: #10b981; --error: #dc2626;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; font: 14px/1.5 system-ui, sans-serif; color: var(--text); background: var(--bg); }
-    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
-    a { color: var(--bar); }
+    body { margin: 0; font: 14px/1.5 system-ui, sans-serif; color: var(--text); background: var(--bg); display: flex; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
 
-    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 20px; }
-    header h1 { margin: 0; font-size: 20px; }
-    header .right { margin-left: auto; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+    /* ---------- Sidebar ---------- */
+    aside { width: 240px; flex-shrink: 0; background: var(--sidebar); color: var(--sidebar-text); padding: 24px 12px; position: sticky; top: 0; height: 100vh; }
+    .brand { padding: 0 8px 24px; }
+    .brand strong { display: block; color: #fff; font-size: 17px; }
+    .brand span { color: #818cf8; font-size: 12px; letter-spacing: .05em; }
+    nav a { display: block; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; }
+    nav a:hover { background: rgba(255, 255, 255, .06); }
+    nav a.active { background: var(--accent); color: #fff; }
 
-    /* Summary numbers */
-    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .tile { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
-    .tile .label { color: var(--muted); font-size: 13px; }
-    .tile .value { font-size: 28px; font-weight: 600; }
-
-    /* Two cards side by side, one column on phones */
-    .grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
-    .grid.wide-right { grid-template-columns: 2fr 3fr; }
-    @media (max-width: 800px) { .grid, .grid.wide-right { grid-template-columns: 1fr; } }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 16px; min-width: 0; }
-    .card h2 { margin: 0 0 12px; font-size: 15px; }
-    .scroll { overflow-x: auto; }
-
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-    th { color: var(--muted); font-weight: 500; font-size: 13px; }
-    tr:last-child td { border-bottom: 0; }
-    .num { text-align: right; }
-    .muted { color: var(--muted); }
-    tr.clickable { cursor: pointer; }
-    tr.clickable:hover td, tr.selected td { background: var(--track); }
-
-    .bar { height: 8px; background: var(--track); border-radius: 4px; min-width: 80px; }
-    .bar div { height: 100%; background: var(--bar); border-radius: 4px; }
-
-    button, select { font: inherit; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--text); }
-    button { cursor: pointer; }
-    button:hover { background: var(--track); }
-    #message { margin-bottom: 16px; }
+    /* ---------- Main area ---------- */
+    main { flex: 1; padding: 32px; min-width: 0; }
+    h1 { margin: 0 0 16px; font-size: 26px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 24px; }
+    .pill { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 16px; color: var(--muted); }
+    .pill b { color: var(--text); }
+    .toolbar .updated { color: var(--muted); font-size: 13px; margin-left: 4px; }
+    #message { margin-bottom: 16px; padding: 10px 14px; border-radius: 8px; background: var(--accent-light); }
     #message:empty { display: none; }
-    #message.error { color: var(--error); }
+    #message.error { background: #fef2f2; color: var(--error); }
+
+    /* Three board columns, like a kanban board */
+    .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
+    .column h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .count { background: var(--accent-light); color: var(--accent); font-size: 12px; padding: 0 8px; border-radius: 999px; font-weight: 500; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); }
+    .card-top { display: flex; justify-content: space-between; gap: 8px; }
+    .card-title { font-weight: 600; }
+    .card-sub { color: var(--muted); font-size: 13px; }
+    .tag { font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+    .tag.green { background: #dcfce7; color: #15803d; }
+    .tag.orange { background: #fef3c7; color: #b45309; }
+    .tag.grey { background: #f1f5f9; color: var(--muted); }
+    .empty { border: 1px dashed var(--line); border-radius: 10px; padding: 16px; text-align: center; color: var(--muted); font-size: 13px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+
+    .bar { height: 6px; background: #eef2f7; border-radius: 3px; margin-top: 10px; }
+    .bar div { height: 100%; background: var(--accent); border-radius: 3px; }
+
+    button { font: inherit; font-size: 13px; cursor: pointer; border: 0; border-radius: 6px; padding: 5px 12px; background: var(--accent); color: #fff; }
+    button:hover { opacity: .9; }
+    button.plain { background: none; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px; font-size: 14px; }
+    select { font: inherit; font-size: 13px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+
+    /* Report table */
+    .report { margin-top: 12px; }
+    .report h2 { font-size: 15px; margin: 12px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: 0; }
+    td.num { text-align: right; width: 60px; padding-right: 16px; }
+    td.bar-cell { width: 50%; }
+    td.bar-cell .bar { margin: 0; }
+
+    /* Phones and small screens: sidebar on top, columns stacked */
+    @media (max-width: 1000px) { .board { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) {
+      body { flex-direction: column; }
+      aside { width: auto; height: auto; position: static; padding: 16px; }
+      .brand { padding-bottom: 12px; }
+      nav { display: flex; flex-wrap: wrap; gap: 4px; }
+      nav a { margin: 0; }
+      main { padding: 20px 16px; }
+    }
   </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Meridian Bike Share</h1>
-    <div class="right">
-      <span id="updated"></span>
-      <button id="refresh" type="button">Refresh</button>
-      <a href="/docs" target="_blank">API docs</a>
-    </div>
-  </header>
+<aside>
+  <div class="brand">
+    <strong>Meridian Bike Share</strong>
+    <span>ADMIN</span>
+  </div>
+  <nav>
+    <a href="#top" class="active">Dashboard</a>
+    <a href="#report">Busiest stations</a>
+    <a href="/docs" target="_blank">API docs</a>
+  </nav>
+</aside>
+
+<main id="top">
+  <h1>Dashboard</h1>
+
+  <div class="toolbar">
+    <span class="pill"><b id="total-stations">–</b> stations</span>
+    <span class="pill"><b id="total-free">–</b> bikes free</span>
+    <span class="pill"><b id="total-out">–</b> bikes out</span>
+    <span class="pill"><b id="total-rentals">–</b> rentals total</span>
+    <button id="refresh" class="plain" type="button">Refresh</button>
+    <span class="updated" id="updated"></span>
+  </div>
 
   <div id="message" role="status"></div>
 
-  <div class="tiles">
-    <div class="tile"><div class="label">Stations</div><div class="value" id="total-stations">–</div></div>
-    <div class="tile"><div class="label">Bikes available</div><div class="value" id="total-free">–</div></div>
-    <div class="tile"><div class="label">Bikes out now</div><div class="value" id="total-out">–</div></div>
-    <div class="tile"><div class="label">Total rentals</div><div class="value" id="total-rentals">–</div></div>
+  <div class="board">
+    <section class="column">
+      <h2><span class="dot" style="background:var(--blue)"></span> Stations <span class="count" id="count-stations">0</span></h2>
+      <div id="stations"></div>
+    </section>
+
+    <section class="column">
+      <h2><span class="dot" style="background:var(--orange)"></span> Out on rental <span class="count" id="count-out">0</span></h2>
+      <div id="active"></div>
+    </section>
+
+    <section class="column">
+      <h2><span class="dot" style="background:var(--green)"></span> Recently returned <span class="count" id="count-returned">0</span></h2>
+      <div id="returned"></div>
+    </section>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Stations</h2>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Station</th><th class="num">Free / capacity</th><th style="width:40%">Fill</th></tr></thead>
-          <tbody id="stations"></tbody>
-        </table>
-      </div>
-      <p class="muted" style="margin:10px 0 0">Click a station to see its bikes.</p>
-    </div>
-
-    <div class="card">
-      <h2 id="bikes-title">Bikes</h2>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Bike</th><th>Status</th><th></th></tr></thead>
-          <tbody id="bikes"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid wide-right">
-    <div class="card">
-      <h2>Busiest stations</h2>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Station</th><th class="num">Rentals</th><th style="width:50%"></th></tr></thead>
-          <tbody id="busiest"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Bikes out now</h2>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Rental</th><th>Bike</th><th>From</th><th>Out for</th><th>Return to</th></tr></thead>
-          <tbody id="active"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Recent rentals</h2>
-    <div class="scroll">
-      <table>
-        <thead><tr><th>Rental</th><th>Bike</th><th>From</th><th>To</th><th>Started</th><th>Duration</th></tr></thead>
-        <tbody id="recent"></tbody>
-      </table>
-    </div>
-  </div>
+  <section class="card report" id="report">
+    <h2>Busiest stations (by rentals started)</h2>
+    <table><tbody id="busiest"></tbody></table>
+  </section>
 </main>
 
 <script>
   let stations = [];
-  let selectedStation = null;
 
   // ---------- Small helpers ----------
 
@@ -172,10 +167,6 @@
     return `<div class="bar" title="${value} of ${max}"><div style="width:${percent}%"></div></div>`;
   }
 
-  function emptyRow(columns, text) {
-    return `<tr><td colspan="${columns}" class="muted">${text}</td></tr>`;
-  }
-
   function showMessage(text, isError) {
     $("message").textContent = text;
     $("message").className = isError ? "error" : "";
@@ -191,64 +182,78 @@
     return data;
   }
 
-  // ---------- Drawing each section ----------
+  // ---------- Drawing each column ----------
 
-  function renderTiles(rentals) {
-    const out = rentals.filter((r) => !r.end_time).length;
+  function renderTotals(rentals, active) {
     $("total-stations").textContent = stations.length;
     $("total-free").textContent = stations.reduce((sum, s) => sum + s.free_bikes, 0);
-    $("total-out").textContent = out;
+    $("total-out").textContent = active.length;
     $("total-rentals").textContent = rentals.length;
   }
 
-  function renderStations() {
-    $("stations").innerHTML = stations.map((s) => `
-      <tr class="clickable ${s.id === selectedStation ? "selected" : ""}" data-station="${s.id}">
-        <td>${esc(s.name)}</td>
-        <td class="num">${s.free_bikes} / ${s.capacity}</td>
-        <td>${bar(s.free_bikes, s.capacity)}</td>
-      </tr>`).join("");
+  // One card per station, with a Rent button for each bike docked there.
+  function renderStations(bikesByStation) {
+    $("count-stations").textContent = stations.length;
+    $("stations").innerHTML = stations.map((s) => {
+      const docked = bikesByStation[s.id].filter((b) => b.status === "available");
+      const tag = s.free_bikes === 0 ? '<span class="tag grey">Empty</span>' : '<span class="tag green">' + s.free_bikes + ' free</span>';
+      const buttons = docked.map((b) =>
+        `<button type="button" data-rent="${b.id}" data-station="${s.id}">Rent bike #${b.id}</button>`).join("");
+      return `
+        <div class="card">
+          <div class="card-top">
+            <span class="card-title">${esc(s.name)}</span>
+            ${tag}
+          </div>
+          <div class="card-sub">${s.free_bikes} of ${s.capacity} docks in use</div>
+          ${bar(s.free_bikes, s.capacity)}
+          ${buttons ? '<div class="actions">' + buttons + '</div>' : ""}
+        </div>`;
+    }).join("");
   }
 
-  async function renderBikes() {
-    const bikes = await api("GET", "/stations/" + selectedStation + "/bikes");
-    const docked = bikes.filter((b) => b.status === "available");
-    $("bikes-title").textContent = "Bikes at " + stationName(selectedStation);
-    $("bikes").innerHTML = docked.length
-      ? docked.map((b) => `
-          <tr>
-            <td>#${b.id}</td><td>available</td>
-            <td class="num"><button type="button" data-rent="${b.id}">Rent</button></td>
-          </tr>`).join("")
-      : emptyRow(3, "No bikes docked here.");
-  }
-
-  function renderActive(rentals) {
-    const active = rentals.filter((r) => !r.end_time);
+  // One card per bike that is out, with a station picker and a Return button.
+  function renderActive(active) {
     const options = stations.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
 
-    // Remember any "Return to" choices so the auto-refresh doesn't reset them.
+    // Remember any "return to" choices so the auto-refresh doesn't reset them.
     const chosen = {};
     document.querySelectorAll("#active select").forEach((select) => {
       chosen[select.id] = select.value;
     });
 
-    $("active").innerHTML = active.length
-      ? active.map((r) => `
-          <tr>
-            <td>#${r.id}</td><td>#${r.bike_id}</td>
-            <td>${esc(stationName(r.start_station_id))}</td>
-            <td>${formatDuration(r.start_time)}</td>
-            <td>
-              <select id="return-to-${r.id}">${options}</select>
-              <button type="button" data-return="${r.id}">Return</button>
-            </td>
-          </tr>`).join("")
-      : emptyRow(5, "No bikes out.");
+    $("count-out").textContent = active.length;
+    $("active").innerHTML = active.length ? active.map((r) => `
+      <div class="card">
+        <div class="card-top">
+          <span class="card-title">#${r.id} Bike #${r.bike_id}</span>
+          <span class="tag orange">${formatDuration(r.start_time)}</span>
+        </div>
+        <div class="card-sub">From ${esc(stationName(r.start_station_id))} · ${formatTime(r.start_time)}</div>
+        <div class="actions">
+          <select id="return-to-${r.id}">${options}</select>
+          <button type="button" data-return="${r.id}">Return</button>
+        </div>
+      </div>`).join("") : '<div class="empty">No bikes out</div>';
 
     for (const id in chosen) {
       if ($(id)) $(id).value = chosen[id];
     }
+  }
+
+  // The 5 most recent finished rentals.
+  function renderReturned(rentals) {
+    const returned = rentals.filter((r) => r.end_time).slice(0, 5);  // the API returns newest first
+    $("count-returned").textContent = returned.length;
+    $("returned").innerHTML = returned.length ? returned.map((r) => `
+      <div class="card">
+        <div class="card-top">
+          <span class="card-title">#${r.id} Bike #${r.bike_id}</span>
+          <span class="tag green">${formatDuration(r.start_time, r.end_time)}</span>
+        </div>
+        <div class="card-sub">${esc(stationName(r.start_station_id))} → ${esc(stationName(r.end_station_id))}</div>
+        <div class="card-sub">${formatTime(r.end_time)}</div>
+      </div>`).join("") : '<div class="empty">No returns yet</div>';
   }
 
   async function renderBusiest() {
@@ -258,41 +263,27 @@
       <tr>
         <td>${esc(r.name)}</td>
         <td class="num">${r.rental_count}</td>
-        <td>${bar(r.rental_count, max)}</td>
+        <td class="bar-cell">${bar(r.rental_count, max)}</td>
       </tr>`).join("");
   }
 
-  function renderRecent(rentals) {
-    const recent = rentals.slice(0, 10);  // the API returns newest first
-    $("recent").innerHTML = recent.length
-      ? recent.map((r) => `
-          <tr>
-            <td>#${r.id}</td><td>#${r.bike_id}</td>
-            <td>${esc(stationName(r.start_station_id))}</td>
-            <td>${r.end_station_id ? esc(stationName(r.end_station_id)) : '<span class="muted">still out</span>'}</td>
-            <td>${formatTime(r.start_time)}</td>
-            <td>${formatDuration(r.start_time, r.end_time)}</td>
-          </tr>`).join("")
-      : emptyRow(6, "No rentals yet.");
-  }
-
-  // Load everything 
+  // ---------- Load everything ----------
 
   async function refresh() {
     try {
       stations = await api("GET", "/stations");
       const rentals = await api("GET", "/rentals");
+      const active = rentals.filter((r) => !r.end_time);
 
-      // Show the first station's bikes until someone clicks another one.
-      if (selectedStation === null && stations.length) {
-        selectedStation = stations[0].id;
-      }
+      // Get the bikes at every station at the same time.
+      const bikeLists = await Promise.all(stations.map((s) => api("GET", "/stations/" + s.id + "/bikes")));
+      const bikesByStation = {};
+      stations.forEach((s, i) => { bikesByStation[s.id] = bikeLists[i]; });
 
-      renderTiles(rentals);
-      renderStations();
-      renderActive(rentals);
-      renderRecent(rentals);
-      if (selectedStation !== null) await renderBikes();
+      renderTotals(rentals, active);
+      renderStations(bikesByStation);
+      renderActive(active);
+      renderReturned(rentals);
       await renderBusiest();
       $("updated").textContent = "Updated " + new Date().toLocaleTimeString();
     } catch (err) {
@@ -300,16 +291,9 @@
     }
   }
 
-  // Buttons and clicks 
+  // ---------- Buttons ----------
 
   $("refresh").addEventListener("click", refresh);
-
-  $("stations").addEventListener("click", (event) => {
-    const row = event.target.closest("tr[data-station]");
-    if (!row) return;
-    selectedStation = Number(row.dataset.station);
-    refresh();
-  });
 
   document.addEventListener("click", async (event) => {
     const bikeId = event.target.dataset.rent;
@@ -318,7 +302,8 @@
 
     try {
       if (bikeId) {
-        const result = await api("POST", "/rentals?bike_id=" + bikeId + "&start_station_id=" + selectedStation);
+        const stationId = event.target.dataset.station;
+        const result = await api("POST", "/rentals?bike_id=" + bikeId + "&start_station_id=" + stationId);
         showMessage("Rental #" + result.rental_id + " started for bike #" + bikeId + ".");
       } else {
         const endStation = $("return-to-" + rentalId).value;
